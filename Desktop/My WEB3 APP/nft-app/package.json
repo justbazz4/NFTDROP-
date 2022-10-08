@@ -21,5 +21,19 @@
     "postcss": "^8.4.14",
     "tailwindcss": "^3.1.2",
     "typescript": "4.7.2"
-  }
+  },
+  "name": "nft-app",
+  "description": "This example shows how to use [Tailwind CSS](https://tailwindcss.com/) [(v3.0)](https://tailwindcss.com/blog/tailwindcss-v3) with Next.js. It follows the steps outlined in the official [Tailwind docs](https://tailwindcss.com/docs/guides/nextjs).",
+  "version": "1.0.0",
+  "main": "next.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/justbazz4/NFTDROP-.git"
+  },
+  "author": "blockchain-bazz",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/justbazz4/NFTDROP-/issues"
+  },
+  "homepage": "https://github.com/justbazz4/NFTDROP-#readme"
 }
