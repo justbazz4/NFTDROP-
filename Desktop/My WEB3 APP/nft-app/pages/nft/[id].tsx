@@ -1,9 +1,16 @@
 import React from 'react';
 import { useMetamask, useDisconnect, useAddress } from "@thirdweb-dev/react";
+import { GetServerSideProps } from 'next';
+import { sanityClient, urlFor } from '../../sanity';
+import { Collection } from '../../typings';
+import Link from 'next/link';
 
 
+interface Props {
+  collection: Collection
+}
 
-function NFTDropPage() {
+function NFTDropPage({ collection }: Props) {
 
     // AUTH
     const connectWithMetmask = useMetamask();
@@ -20,16 +27,15 @@ function NFTDropPage() {
              p-2' >
            <img 
            className='w-44 rounded-xl object-cover lg:h-96 lg:w-72'
-           src='https://img.freepik.com/premium-vector/awesome-bored-ape-glass-eye-nft-style_361671-269.jpg?w=2000' 
+           src={urlFor(collection.previewImage).url()} 
            alt='' />
            </div>
            <div className='space-y-2 text-center p-5'>
             <h1 className='text-4xl font-bold text-yellow-300 '>
-                BAZZ NATION COLLECTIONS
+                {collection.nftCollectionName}
             </h1>
             <h2 className='text-gray-200'>
-                A collection of Mr Bazz Apes who 
-                live & breathe Crypto/react!
+               {collection.description}
             </h2>
            </div>
         </div>
@@ -37,12 +43,14 @@ function NFTDropPage() {
         {/* right side */}
        <div className='flex flex-1 flex-col p-12 lg:col-span-6 bg-slate-300'>
         {/* Header */}
+        
         <header className='flex items-center justify-between'>
+        <Link href={'/'} >
             <h1 className='w-52 cursor-pointer text-xl font-extralight sm:w-80'>
             The{' '}
             <span className='font-extrabold underline decoration-slate-700/50'>Bazz Nation{' '}</span> NFT Market Place
             </h1>
-
+            </Link>
             <button onClick={() => (address ? disconnect() : connectWithMetmask())} className='rounded-full bg-rose-600 text-white px-4 py-2 text-xs font-bold 
             lg:px-5 lg:py-3 lg:text-base '>
                 {address ? 'Sign Out' : 'Sign In'}
@@ -54,12 +62,12 @@ function NFTDropPage() {
             rounded-full text-sm sm:w-80 '>You're Logged with  wallet:<span className='font-bold'> {address.substring(0, 5)}...{address.substring(address.length -5)}</span> </p>
           }
 
-        {/* Content */}
+         {/* Content */}
          <div className='mt-10 flex flex-1 flex-col items-center 
           space-x-6 text-center lg:space-y-0 lg:justify-center'>
             <img 
             className='w-80 object-cover pb-10 lg:h-70 lg:w-50'
-            src='https://memekong.io/wp-content/uploads/2022/04/Meme-Kong-Logo-2.png'  
+            src={urlFor(collection.mainImage).url()}  
             alt='' />
       
              <h1 className='text-2xl font-bold lg:text-3xl lg:font-extrabold'>The Ape Coding Club | NFT Drop</h1>
@@ -68,16 +76,69 @@ function NFTDropPage() {
            claimed</p>
          </div>
 
-        {/* Mint Button */}
+         {/* Mint Button */}
          <button className='h-16 mt-10  w-full rounded-full bg-gradient-to-br from-green-900 to-purple-900  text-white font-bold 
           '>
             Mint NFT (0.01)
         </button>
 
        </div>
-
+        <Link href='/'>
+           <footer className='sticky bottom-2 w-full cursor-pointer'>
+               <div className='flex items-left justify-left'>
+          
+                <img
+                   className=' rounded-full filter grayscale hover:grayscale-0'
+                   width={50} height={50}
+             
+                  src='https://nfpsynergy.net/image-for/node/4421?facebookPeaseUpdateYourCache=1'
+                   alt='footer' />
+               </div>
+            </footer>
+         </Link>
     </div>
   )
 }
 
 export default NFTDropPage
+
+export const getServerSideProps: GetServerSideProps = async ({params}) => {
+  const query = `*[_type == "collection" && slug.current == $id][0]{
+    _id,
+    title,
+    address,
+    description,
+    nftCollectionName,
+    mainImage {
+      asset
+    },
+    previewImage {
+      asset
+    },
+    slug {
+      current
+    },
+    creator-> {
+      _id,
+      name,
+      address,
+      slug {
+        current
+      },
+    },
+   }`
+
+  const collection = await sanityClient.fetch(query, {
+    id: params?.id
+  })
+  if (!collection) {
+    return {
+      notFound: true
+    }
+  }
+  return {
+    props:{
+      collection,
+    }
+  }
+}
