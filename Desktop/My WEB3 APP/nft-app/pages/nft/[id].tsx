@@ -1,25 +1,118 @@
-import React from 'react';
-import { useMetamask, useDisconnect, useAddress } from "@thirdweb-dev/react";
+import React, { useEffect, useState } from 'react';
+import { useMetamask, useDisconnect, useAddress, useNFTDrop } from "@thirdweb-dev/react";
 import { GetServerSideProps } from 'next';
 import { sanityClient, urlFor } from '../../sanity';
 import { Collection } from '../../typings';
 import Link from 'next/link';
-
+import { BigNumber } from 'ethers';
+import toast, { Toaster } from 'react-hot-toast'
 
 interface Props {
   collection: Collection
 }
 
 function NFTDropPage({ collection }: Props) {
+  const [claimedSupply, setClaimedSupply] = useState<number>(0);
+  const [totalSupply, setTotalSupply] = useState<BigNumber>();
+  const [loading, setLoading] = useState<boolean>(true);
+  const [priceInEth, setPriceInEth] = useState <string>();
+  const nftDrop = useNFTDrop(collection.address);
+
 
     // AUTH
     const connectWithMetmask = useMetamask();
     const address = useAddress();
     const disconnect = useDisconnect();
 
+    useEffect(() => {
+      if (!nftDrop) return;
+
+      const fetchPrice = async () => {
+        const claimConditons = await nftDrop.claimConditions.getAll();
+        setPriceInEth(claimConditons?.[0].currencyMetadata.displayValue);
+      }
+      fetchPrice();
+    }, [nftDrop])
+
+    useEffect(() => {
+      if (!nftDrop) return;
+
+      const fetchNFTDropData = async () => {
+        setLoading(true);
+
+        const claimed = await nftDrop.getAllClaimed();
+        const total = await nftDrop.totalSupply();
+
+        setClaimedSupply(claimed.length);
+        setTotalSupply(total);
+
+        setLoading(false);
+      }
+
+      fetchNFTDropData();
+    }, [nftDrop])
+
+    const mintNFT = () => {
+      if (!nftDrop || !address) return;
+
+      const quantity = 1; // how many unique NFT's you want to claim
+       
+        setLoading(true);
+        const notification = toast.loading('Minting NFT...', {
+          style: {
+            background: 'green',
+            color: 'white',
+            fontWeight: 'bolder',
+            fontSize: '17px',
+            padding: '20px',
+
+          }
+        })
+
+      nftDrop.claimTo(address, quantity)
+      .then(async (tx) => {
+        const receipt =tx[0].receipt // the transaction receipt
+        const claimedTokenId = tx[0].id // get the NFT  id 
+        const claimedNFT = await tx[0].data(); //optional) get the claimed NFT metadata
+
+        toast('HURRAY!!  You successfully minted...',{
+          duration: 8000,
+          style: {
+            background: 'white',
+            color: 'green',
+            fontWeight: 'bolder',
+            fontSize: '17px',
+            padding: '20px',
+          }
+        })
+
+        console.log(receipt);
+        console.log(claimedNFT);
+        console.log(claimedTokenId);
+
+      })
+      .catch((err) => {
+          console.log(err)
+          toast('Whoops.. Something went wrong !!', {
+            style: {
+              background: 'red',
+              color: 'white',
+              fontWeight: 'bolder',
+              fontSize: '17px',
+              padding: '20px',
+            }
+          })
+      })
+      .finally(() => {
+         setLoading(false)
+         toast.dismiss(notification)
+      })
+    }
+
   return (
     <div className='flex h-screen flex-col lg:grid lg:grid-cols-10 '>
-       
+       <Toaster position='bottom-center'/>
+
        <div className='lg:col-span-4 bg-gradient-to-br from-cyan-800 to-rose-600'>
         {/* left side */}
         <div className='flex flex-col items-center justify-center py-2 lg:min-h-screen'>
@@ -71,31 +164,45 @@ function NFTDropPage({ collection }: Props) {
             alt='' />
       
              <h1 className='text-2xl font-bold lg:text-3xl lg:font-extrabold'>The Ape Coding Club | NFT Drop</h1>
-           
-           <p className='pt-2 text-xl text-orange-700 cursor-pointer hover:text-slate-800 rounded-full'>13 / 21 NFT's 
-           claimed</p>
+           {loading ? (
+               <p className='pt-2 text-xl text-green-700 animate-pulse'> 
+                Loading NFT Count...
+               </p>
+           ): (
+            <p className='pt-2 text-xl text-orange-700 cursor-pointer hover:text-slate-800 rounded-full'>{claimedSupply} / {totalSupply?.toString()} NFT's 
+            claimed</p> 
+           )}
+            
+            {loading && (
+              <img 
+              className='h-20 w-20 object-contain '
+              src="https://th.bing.com/th/id/R.9627baf241edb820aa70797c3c2f6320?rik=A%2bkXqHNDgaugQA&pid=ImgRaw&r=0"
+              alt='' />
+            )}
+         
          </div>
 
          {/* Mint Button */}
-         <button className='h-16 mt-10  w-full rounded-full bg-gradient-to-br from-green-900 to-purple-900  text-white font-bold 
+         <button
+         onClick={mintNFT}
+         disabled={loading || claimedSupply === totalSupply?.toNumber() || !address}
+         className='h-16 mt-10  w-full rounded-full bg-gradient-to-br from-green-900 to-purple-900 
+          text-white font-bold disabled:bg-gray-300
           '>
-            Mint NFT (0.01)
+            {loading ? (
+              <>Loading..</>
+            ) : claimedSupply === totalSupply?.toNumber() ? (
+              <>SOLD OUT</>
+            ) : !address ? (
+              <>Sign In to Mint</>
+            ) : (
+              <span className='font-bold'> Mint NFT ({priceInEth} ETH)</span>
+            )}
+           
         </button>
 
        </div>
-        <Link href='/'>
-           <footer className='sticky bottom-2 w-full cursor-pointer'>
-               <div className='flex items-left justify-left'>
-          
-                <img
-                   className=' rounded-full filter grayscale hover:grayscale-0'
-                   width={50} height={50}
-             
-                  src='https://nfpsynergy.net/image-for/node/4421?facebookPeaseUpdateYourCache=1'
-                   alt='footer' />
-               </div>
-            </footer>
-         </Link>
+       
     </div>
   )
 }
