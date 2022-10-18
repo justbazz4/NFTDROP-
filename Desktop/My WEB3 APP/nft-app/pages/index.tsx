@@ -14,14 +14,15 @@ const Home = ({ collections }: Props) => {
   return (
     <div className=' mx-auto max-w-7xl min-h-screen flex flex-col  my-20 px-10 2xl:px-0'>
       <Head>
-        <title>NFT Dapp</title>
+        <title>NFT-Dapp</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
        <div className='mb-10 text-4xl font-extralight'>
        <h1 >Welcome to the  
          <span 
-         className='cursor-pointer font-extrabold underline decoration-green-700/50 hover:text-green-700 '> NFT DROP CHALLENGE</span> </h1>
+         className='cursor-pointer font-extrabold underline
+          decoration-green-700/50 hover:text-green-700 '> NFT DROP CHALLENGE</span> </h1>
        </div>
 
 
@@ -29,9 +30,9 @@ const Home = ({ collections }: Props) => {
             <div className='grid space-x-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 '>
               {collections.map(collection => (
                 <Link href={`/nft/${collection.slug.current}`} >
-                 <div className='flex flex-col items-center cursor-pointer
-                  transition-all duration-200 hover:scale-105 '>
-                    <img 
+                  <div className='flex flex-col items-center cursor-pointer
+                    transition-all duration-200 hover:scale-105 '>
+                     <img 
                     className='h-96 w-60 rounded-2xl object-cover'
                     src={urlFor(collection.mainImage).url()} alt=''/>
 
