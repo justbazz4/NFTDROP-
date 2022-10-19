@@ -53,7 +53,10 @@ function NFTDropPage({ collection }: Props) {
     }, [nftDrop])
 
     const mintNFT = () => {
+
+      
       if (!nftDrop || !address) return;
+
 
       const quantity = 1; // how many unique NFT's you want to claim
        
